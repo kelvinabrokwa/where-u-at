@@ -27,23 +27,25 @@ function parse(html) {
 
 var data = JSON.parse(fs.readFileSync('./data.json'));
 var outStream = fs.createWriteStream('final.json', {'flags': 'a'});
-outStream.write('[');
+outStream.write('[', function() {
+  write(0);
+});
 
 function write(i) {
   if (i === data.length) {
-    outStream.end(']');
-    return;
+    outStream.write(']');
+  } else {
+    fetch(data[i].link)
+      .then(function(building) {
+        console.log(building);
+        data[i].building = building;
+        outStream.write(JSON.stringify(data[i]) + (i < data.length - 1 ? ',' : ''), function() {
+          write(++i);
+        });
+      })
+      .catch(function(e) {
+        console.log(e);
+      });
   }
-  fetch(data[i].link)
-    .then(function(building) {
-      console.log(building);
-      data[i].building = building;
-      outStream.write(JSON.stringify(data[i]) + (i < data.length - 1 ? ',' : ''));
-      write(++i);
-    })
-    .catch(function(e) {
-      console.log(e);
-    });
 }
 
-write(0);
