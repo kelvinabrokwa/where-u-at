@@ -26,7 +26,7 @@ function parse(html) {
 }
 
 var data = JSON.parse(fs.readFileSync('./data.json'));
-var outStream = fs.createWriteStream('final.json', {'flags': 'a'});
+var outStream = fs.createWriteStream('with_buildings.json', {'flags': 'a'});
 outStream.write('[', function() {
   write(0);
 });
