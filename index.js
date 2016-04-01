@@ -13,7 +13,7 @@ fetch('./seats_times.json')
     data = d;
     map.on('load', function() {
       setSource();
-      setStyle(8);
+      addStyle(8);
       setLabelStyle();
     });
   })
@@ -31,11 +31,19 @@ function setLabelStyle() {
     });
   });
 }
-function setStyle(time) {
+function addStyle(time) {
   time = Math.floor(time);
   map.batch(function(batch) {
     Object.keys(data).forEach(function(d) {
       batch.addLayer(circleStyle(d, data[d].times[time]));
+    });
+  });
+}
+function setRadius(time) {
+  time = Math.floor(time);
+  map.batch(function(batch) {
+    Object.keys(data).forEach(function(d) {
+      batch.setPaintProperty(d + '-circle', 'circle-radius', data[d].times[time] / 15);
     });
   });
 }
@@ -123,9 +131,7 @@ var timeScale = d3.scale.linear()
 
 function mousemove() {
   var time = timeScale.invert(d3.mouse(this)[0]);
-  setStyle(time);
-
+  setRadius(time);
   var postfix = time < 12 ? ' AM' : ' PM';
-  console.log(12);
   label.text((Math.floor(time) === 12 ? 12 : Math.floor(time % 12)) + postfix);
 }
