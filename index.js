@@ -1,9 +1,9 @@
-/* global mapboxgl */
+/* global mapboxgl, d3 */
 var data;
 mapboxgl.accessToken = 'pk.eyJ1Ijoia2VsdmluYWJyb2t3YSIsImEiOiJkcUF1TWlVIn0.YzBtz0O019DJGk3IpFi72g';
 var map = new mapboxgl.Map({
   container: 'map',
-  style: 'mapbox://styles/kelvinabrokwa/cimhzn0k5001xg4nsodukqsr8',
+  style: 'mapbox://styles/kelvinabrokwa/cimi2yjtc0033qxno72oiq5kb',
   center: [-76.711, 37.269],
   zoom: 14
 });
@@ -32,15 +32,12 @@ function setLabelStyle() {
   });
 }
 function setStyle(time) {
+  time = Math.floor(time);
   map.batch(function(batch) {
     Object.keys(data).forEach(function(d) {
       batch.addLayer(circleStyle(d, data[d].times[time]));
     });
   });
-}
-function changeTime() { // eslint-disable-line no-unused-vars
-  var time = document.getElementById('timeInput').value;
-  setStyle(time);
 }
 function labelStyle(building) {
   return {
@@ -51,6 +48,9 @@ function labelStyle(building) {
     layout: {
       'text-field': '{building}',
       'text-size': 10
+    },
+    paint: {
+      'text-color': '#FFF'
     }
   };
 }
@@ -83,10 +83,49 @@ function circleStyle(building, radius) {
     type: 'circle',
     filter: ['==', 'building', building],
     paint: {
-      'circle-radius': radius / 20,
-      'circle-color': '#551A8B',
-      'circle-opacity': 0.8,
+      'circle-radius': radius / 15,
+      'circle-color': '#E81A1A',
+      'circle-opacity': 0.6,
       'circle-blur': 0.5
     }
   };
+}
+
+// overlay
+var height = 200, width = 600;
+
+var svg = d3.select('#overlay').append('svg')
+  .attr('width', width)
+  .attr('height', height);
+
+var label = svg.append('text')
+  .attr('class', 'time label')
+  .attr('text-anchor', 'end')
+  .attr('y', height - 24)
+  .attr('x', width)
+  .text('8 AM');
+
+var box = label.node().getBBox();
+
+svg.append('rect')
+  .attr('class', 'overlay')
+  .attr('x', box.x)
+  .attr('y', box.y)
+  .attr('width', box.width)
+  .attr('height', box.height)
+  .on('mousemove', mousemove);
+
+
+var timeScale = d3.scale.linear()
+  .domain([8, 20])
+  .range([box.x, box.x + box.width])
+  .clamp(true);
+
+function mousemove() {
+  var time = timeScale.invert(d3.mouse(this)[0]);
+  setStyle(time);
+
+  var postfix = time < 12 ? ' AM' : ' PM';
+  console.log(12);
+  label.text((Math.floor(time) === 12 ? 12 : Math.floor(time % 12)) + postfix);
 }
