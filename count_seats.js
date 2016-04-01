@@ -74,4 +74,4 @@ for (var b in out) {
   }
 }
 
-console.log(out);
+console.log(JSON.stringify(out));
