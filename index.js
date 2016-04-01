@@ -41,9 +41,10 @@ function addStyle(time) {
 }
 function setRadius(time) {
   time = Math.floor(time);
+  var zoom = map.getZoom();
   map.batch(function(batch) {
     Object.keys(data).forEach(function(d) {
-      batch.setPaintProperty(d + '-circle', 'circle-radius', data[d].times[time] / 15);
+      batch.setPaintProperty(d + '-circle', 'circle-radius', (zoom * data[d].times[time]) / 100);
     });
   });
 }
