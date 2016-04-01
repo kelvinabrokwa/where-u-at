@@ -1,88 +1,47 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import mapboxgl from 'mapbox-gl';
-
-
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      data: {},
-      time: 8
-    };
-    this.changeTime = this.changeTime.bind(this);
-  }
-  componentDidMount() {
-    mapboxgl.accessToken = 'pk.eyJ1Ijoia2VsdmluYWJyb2t3YSIsImEiOiJkcUF1TWlVIn0.YzBtz0O019DJGk3IpFi72g';
-    this.map = new mapboxgl.Map({
-      container: this.refs.map,
-      style: 'mapbox://styles/mapbox/light-v8',
-      center: [-76.716, 37.269],
-      zoom: 15
+/* global mapboxgl */
+var data;
+mapboxgl.accessToken = 'pk.eyJ1Ijoia2VsdmluYWJyb2t3YSIsImEiOiJkcUF1TWlVIn0.YzBtz0O019DJGk3IpFi72g';
+var map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/kelvinabrokwa/cimhzn0k5001xg4nsodukqsr8',
+  center: [-76.711, 37.269],
+  zoom: 14
+});
+fetch('./seats_times.json')
+  .then(function(res) { return res.json(); })
+  .then(function(d) {
+    data = d;
+    map.on('load', function() {
+      setSource();
+      setStyle(8);
+      setLabelStyle();
     });
-    fetch('./seats_times.json')
-      .then(res => res.json())
-      .then(data => {
-        this.setState({data});
-        this.map.on('load', () => {
-          this.setSource(data);
-          this.setLabelStyle(data);
-          this.setStyle(data, 8);
-        });
-      })
-      .catch(e => console.log(e));
-
-  }
-  setSource(data) {
-    this.map.addSource('buildings', {
-      type: 'geojson',
-      data: data2geoj(data)
-    });
-  }
-  setLabelStyle(data) {
-    this.map.batch(batch => {
-      Object.keys(data).forEach(d => {
-        batch.addLayer(labelStyle(d));
-      });
-    });
-  }
-  setStyle(data, time) {
-    this.map.batch((batch) => {
-      Object.keys(data).forEach(d => {
-        batch.addLayer(circleStyle(d, data[d].times[time]));
-      });
-    });
-  }
-  changeTime(e) {
-    this.setState({time: e.target.value});
-    this.setStyle(this.state.data, e.target.value);
-  }
-  render() {
-    return <div>
-      <div ref='map' style={{height: '500px'}}></div>
-      <div>
-        <input style={{width: '100%'}} type='range' min='8' max='20' defaultValue='8' onChange={this.changeTime}/>
-        {this.state.time}
-      </div>
-    </div>;
-  }
+  })
+  .catch(function(e) { console.log(e); });
+function setSource() {
+  map.addSource('buildings', {
+    type: 'geojson',
+    data: data2geoj(data)
+  });
 }
-
-function circleStyle(building, radius) {
-  return {
-    id: `${building}-circle`,
-    source: 'buildings',
-    type: 'circle',
-    filter: ['==', 'building', building],
-    paint: {
-      'circle-radius': radius / 25,
-      'circle-color': '#551A8B',
-      'circle-opacity': 0.8,
-      'circle-blur': 0.5
-    }
-  };
+function setLabelStyle() {
+  map.batch(function(batch) {
+    Object.keys(data).forEach(function(d) {
+      batch.addLayer(labelStyle(d));
+    });
+  });
 }
-
+function setStyle(time) {
+  map.batch(function(batch) {
+    Object.keys(data).forEach(function(d) {
+      batch.addLayer(circleStyle(d, data[d].times[time]));
+    });
+  });
+}
+function changeTime() { // eslint-disable-line no-unused-vars
+  var time = document.getElementById('timeInput').value;
+  setStyle(time);
+}
 function labelStyle(building) {
   return {
     id: `${building}-label`,
@@ -95,8 +54,7 @@ function labelStyle(building) {
     }
   };
 }
-
-function data2geoj(data) {
+function data2geoj() {
   var out = [];
   var buildings = Object.keys(data);
   for (var i = 0; i < buildings.length; i++) {
@@ -118,5 +76,17 @@ function data2geoj(data) {
     features: out
   };
 }
-
-ReactDOM.render(<App/>, document.getElementById('app'));
+function circleStyle(building, radius) {
+  return {
+    id: `${building}-circle`,
+    source: 'buildings',
+    type: 'circle',
+    filter: ['==', 'building', building],
+    paint: {
+      'circle-radius': radius / 20,
+      'circle-color': '#551A8B',
+      'circle-opacity': 0.8,
+      'circle-blur': 0.5
+    }
+  };
+}
